@@ -1,0 +1,121 @@
+#include <windows.h>   // use as needed for your system
+#include <gl/Gl.h>
+#include <GL/glut.h>
+#include <math.h>
+//<<<<<<<<<<<<<<<<<<<<<<< myInit >>>>>>>>>>>>>>>>>>>>
+#define PI 3.1415926535898 
+float rotation = 0;
+float radius_r = 100;
+bool radius_r_flag = true;
+
+
+
+void myshape(GLfloat centerx, GLfloat centery, GLfloat radius, GLenum GL_TYPE, GLint nuOfPoints, GLfloat rotation)
+{
+	GLdouble angle;
+	glBegin(GL_TYPE);
+	for (int i = 0; i < nuOfPoints; i++)
+	{
+		angle = 2 * PI * i / nuOfPoints;//angle in radians
+		glVertex2f(centerx + radius * cos(angle+rotation), centery + radius * sin(angle+rotation));
+	}
+
+	glEnd();
+	glFlush();
+
+}
+
+
+//<<<<<<<<<<<<<<<<<<<<<<<< Draw_X_Axis >>>>>>>>>>>>>>>
+void Draw_X_Axis(GLint minX, GLint maxX, GLint step, GLenum GL_TYPE, float PointSize) {
+	glBegin(GL_TYPE);
+	glPointSize(PointSize);
+
+	for (GLint i = minX; i <= maxX; i += step) {
+		glVertex2f(i, 0);
+	}
+	glEnd();
+}
+//<<<<<<<<<<<<<<<<<<<<<<<< Draw_Y_Axis >>>>>>>>>>>>>>>
+void Draw_Y_Axis(GLint minY, GLint maxY, GLint step, GLenum GL_TYPE, float PointSize) {
+	glBegin(GL_TYPE);
+	glPointSize(PointSize);
+
+	for (GLint i = minY; i <= maxY; i += step) {
+		glVertex2f(0, i);
+	}
+	glEnd();
+}
+//<<<<<<<<<<<<<<<<<<<<<<<< myDisplay >>>>>>>>>>>>>>>>>
+void myDisplay(void)
+{
+	glClear(GL_COLOR_BUFFER_BIT);     // clear the screen
+	glColor3f(0.0f, 0.0f, 0.0f);
+	Draw_X_Axis(-250, 250, 10, GL_POINTS, 1);
+	Draw_Y_Axis(-250, 250, 10, GL_POINTS, 1);
+	
+	myshape(0, 0, radius_r , GL_POLYGON, 5, rotation);
+	if (radius_r_flag){ 
+		radius_r = radius_r + 5; 
+	}
+	else {
+			radius_r = radius_r - 5;
+		}
+	if (radius_r > 250){
+		radius_r_flag = false;
+	}
+	else if (radius_r < 10) {
+		radius_r_flag = true;
+	}
+			
+	
+	if (rotation > 2 *PI) {
+		rotation = 0;
+	}else {
+		rotation = rotation + 0.051;         //step of rotation
+	}
+	
+
+}
+void myInit(void)
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);       // set white background color
+	glColor3f(0.0f, 0.0f, 0.0f);          // set the drawing color 
+	glPointSize(4.0);		       // a ‘dot’ is 4 by 4 pixels
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(-250, 250, -250, 250);
+	glTranslated(250.0, 250.0, 0.0);		//Position initiale de la sphère.
+}
+//<<<<<<<<<<<<<<<<<<<<<<<< reshape >>>>>>>>>>>>>>>>>>>
+void reshape(GLint width, GLint height) {
+	glViewport(0, 0, width, height);
+	glMatrixMode(GL_PROJECTION); // To operate on the Projection matrix
+	GLfloat aspect = (GLfloat)width / (GLfloat)height;
+	glLoadIdentity(); // Reset the projection matrix
+	if (width >= height) {// aspect >= 1, set the height from -250 to 250, with larger width
+		gluOrtho2D(-250 * aspect, 250 * aspect, -250, 250);
+	}
+	else {// aspect < 1, set the width to -1 to 1, with larger height
+		gluOrtho2D(-250, 250, -250 / aspect, 250 / aspect);
+	}
+}
+void Timer(int value) {
+	glutTimerFunc(33, Timer, 0);
+	glutPostRedisplay();
+}
+//<<<<<<<<<<<<<<<<<<<<<<<< main >>>>>>>>>>>>>>>>>>>>>>
+void main(int argc, char** argv)
+{
+	glutInit(&argc, argv);          // initialize the toolkit
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB); // set display mode
+	glutInitWindowSize(500, 500);     // set window size
+	glutInitWindowPosition(100, 150); // set window position on screen
+	glutCreateWindow("my first attempt"); // open the screen window
+
+	glutDisplayFunc(myDisplay);     // register redraw function
+	glutReshapeFunc(reshape);
+	myInit();
+	Timer(0);
+	glutMainLoop(); 		     // go into a perpetual loop
+}
